@@ -1,4 +1,8 @@
-## Setup Persistent Volume for Models
+These instructions will use a model located in local-models/llama, downloaded from RedHatAI/Meta-Llama-3.1-8B-Instruct-quantized.w4a16
+
+## Setup Persistent Volume for model
+
+This persistent volume will store the model weights, follow these instructions to create the PVC and copy the model weights from your local machine
 
 ```bash
 # Create persistent volume claim
@@ -55,7 +59,9 @@ oc apply -f rhaiis/openshift
 ```
 
 
-# GuideLLM
+# Tokenizer PVC
+
+This persistent volume will store the tokenizer to be used by guidellm, follow these instructions to create the PVC and copy the tokenizer from your local machine
 
 ```bash
 # Create persistent volume claim
@@ -69,7 +75,7 @@ spec:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 50Gi
+      storage: 1Gi
 EOF
 ```
 ```bash
