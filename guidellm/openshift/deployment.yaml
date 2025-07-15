@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: guidellm
+  labels:
+    app: guidellm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: guidellm
+  template:
+    metadata:
+      labels:
+        app: guidellm
+    spec:
+      containers:
+      - name: guidellm
+        image: quay.io/rh-aiservices-bu/guidellm:latest
+        env:
+        - name: GUIDELLM_TARGET
+          value: "http://localhost:8000"
+        - name: GUIDELLM_MODEL
+          value: "neuralmagic/Meta-Llama-3.1-8B-Instruct-quantized.w4a16"
+        - name: GUIDELLM_RATE_TYPE
+          value: "sweep"
+        - name: GUIDELLM_DATA
+          value: "prompt_tokens=256,output_tokens=128"
+        - name: GUIDELLM_MAX_REQUESTS
+          value: "100"
+        - name: GUIDELLM_MAX_SECONDS
+          value: ""
+        - name: GUIDELLM_OUTPUT_PATH
+          value: "/results/results.json"
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+        volumeMounts:
+        - name: results
+          mountPath: /results
+      volumes:
+      - name: results
+        emptyDir: {}

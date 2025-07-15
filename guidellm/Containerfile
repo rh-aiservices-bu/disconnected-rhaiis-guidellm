@@ -1,0 +1,51 @@
+# Use a multi-stage build to create a lightweight production image
+FROM registry.access.redhat.com/ubi9/python-312@sha256:c9a967a1cf947f2374f45d8817f5328f4893be6b0d5749d2287f1db8ed429675 as builder
+
+# Install git for cloning the repository
+USER root
+RUN dnf update -y && dnf install -y git && dnf clean all
+
+# Clone the guidellm repository
+RUN git clone https://github.com/vllm-project/guidellm.git /src
+
+# Create a venv and install guidellm
+RUN python3 -m venv /opt/guidellm \
+    && /opt/guidellm/bin/pip install --no-cache-dir /src
+
+# Copy entrypoint script into the venv bin directory
+RUN install -m0755 /src/deploy/entrypoint.sh /opt/guidellm/bin/entrypoint.sh
+
+# Prod image
+FROM registry.access.redhat.com/ubi9/python-312@sha256:c9a967a1cf947f2374f45d8817f5328f4893be6b0d5749d2287f1db8ed429675
+
+# Copy the virtual environment from the builder stage
+COPY --from=builder /opt/guidellm /opt/guidellm
+
+# Add guidellm bin to PATH
+ENV PATH="/opt/guidellm/bin:$PATH"
+
+# Create results directory and set ownership
+USER root
+RUN mkdir -p /results && chown 1001:1001 /results && chown -R 1001:1001 /opt/guidellm
+
+# Switch to non-root user
+USER 1001
+
+# Set working directory
+WORKDIR /results
+
+# Metadata
+LABEL org.opencontainers.image.source="https://github.com/vllm-project/guidellm" \
+      org.opencontainers.image.description="GuideLLM Performance Benchmarking Container"
+
+# Set the environment variable for the benchmark script
+# TODO: Replace with scenario environment variables
+ENV GUIDELLM_TARGET="http://localhost:8000" \
+    GUIDELLM_MODEL="neuralmagic/Meta-Llama-3.1-8B-Instruct-quantized.w4a16" \
+    GUIDELLM_RATE_TYPE="sweep" \
+    GUIDELLM_DATA="prompt_tokens=256,output_tokens=128" \
+    GUIDELLM_MAX_REQUESTS="100" \
+    GUIDELLM_MAX_SECONDS="" \
+    GUIDELLM_OUTPUT_PATH="/results/results.json"
+
+ENTRYPOINT [ "/opt/guidellm/bin/entrypoint.sh" ]
