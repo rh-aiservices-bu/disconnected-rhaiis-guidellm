@@ -1,6 +1,12 @@
+## Red Hat AI Inference Server - RHAIIS and GuideLLM on OpenShift
+
+This repository will guide you through deploying RHAIIS and GuideLLM on OpenShift.  
+
+Before we deploy the components, we will first create two persistent volumes one for the model weights to be used by RHAIIS, and the other one to store the tokenizer for GuideLLM
+
 These instructions will use a model located in local-models/llama, downloaded from RedHatAI/Meta-Llama-3.1-8B-Instruct-quantized.w4a16
 
-## Setup Persistent Volume for model
+## Setup Persistent Volume for model weights
 
 This persistent volume will store the model weights, follow these instructions to create the PVC and copy the model weights from your local machine
 
@@ -51,13 +57,6 @@ oc rsync ./local-models/llama/ model-copy-pod:/mnt/models/
 # Clean up
 oc delete pod model-copy-pod
 ```
-
-```bash
-#deploy rhaiis
-
-oc apply -f rhaiis/openshift
-```
-
 
 # Tokenizer PVC
 
@@ -110,4 +109,16 @@ oc cp ./local-models/llama/config.json tokenizer-copy-pod:/mnt/tokenizer/
 ```bash
 # Clean up
 oc delete pod tokenizer-copy-pod
+```
+
+## Deploy RHAIIS
+```bash
+# Clean up
+oc apply -f rhaiis/openshift
+```
+
+## Deploy GuideLLM
+```bash
+# Clean up
+oc apply -f guidellm/openshift
 ```
