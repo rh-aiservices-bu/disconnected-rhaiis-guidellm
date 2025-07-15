@@ -19,9 +19,9 @@ spec:
         image: quay.io/rh-aiservices-bu/guidellm:latest
         env:
         - name: GUIDELLM_TARGET
-          value: "http://localhost:8000"
+          value: "http://rhaiis:8000"
         - name: GUIDELLM_MODEL
-          value: "neuralmagic/Meta-Llama-3.1-8B-Instruct-quantized.w4a16"
+          value: "meta-llama-3.1-8B-instruct-quantized.w4a16"
         - name: GUIDELLM_RATE_TYPE
           value: "sweep"
         - name: GUIDELLM_DATA
@@ -32,6 +32,8 @@ spec:
           value: ""
         - name: GUIDELLM_OUTPUT_PATH
           value: "/results/results.json"
+        - name: GUIDELLM_PROCESSOR
+          value: "/mnt/tokenizer"
         resources:
           requests:
             memory: "1Gi"
@@ -42,6 +44,11 @@ spec:
         volumeMounts:
         - name: results
           mountPath: /results
+        - name: tokenizer-pvc
+          mountPath: /mnt/tokenizer
       volumes:
       - name: results
         emptyDir: {}
+      - name: tokenizer-pvc
+        persistentVolumeClaim:
+          claimName: tokenizer
