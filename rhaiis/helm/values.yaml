@@ -1,0 +1,20 @@
+image:
+  repository: registry.redhat.io/rhaiis/vllm-cuda-rhel9
+  tag: "@sha256:137ac606b87679c90658985ef1fc9a26a97bb11f622b988fe5125f33e6f35d78"
+  pullPolicy: IfNotPresent
+
+model:
+  servedModelName: meta-llama-3.1-8B-instruct-quantized.w4a16
+  tensorParallelSize: 1
+  maxModelLen: 8096
+  pvcName: llama-31
+
+resources:
+  gpu: 1
+
+service:
+  port: 8000
+  type: ClusterIP
+
+nameOverride: ""
+fullnameOverride: ""

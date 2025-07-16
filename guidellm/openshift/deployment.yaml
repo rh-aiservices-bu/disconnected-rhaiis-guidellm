@@ -17,7 +17,7 @@ spec:
         image: quay.io/rh-aiservices-bu/guidellm:f1f8ca8
         env:
         - name: GUIDELLM_TARGET
-          value: "http://rhaiis:8000"
+          value: "http://llama-31-8b-instruct-w4a16-rhaiis:8000"
         - name: GUIDELLM_MODEL
           value: "meta-llama-3.1-8B-instruct-quantized.w4a16"
         - name: GUIDELLM_RATE_TYPE
@@ -49,4 +49,4 @@ spec:
         emptyDir: {}
       - name: tokenizer-pvc
         persistentVolumeClaim:
-          claimName: tokenizer
+          claimName: llama-31-8b-instruct-w4a16-tokenizer

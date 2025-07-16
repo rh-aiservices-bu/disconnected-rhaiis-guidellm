@@ -16,7 +16,7 @@ oc create -f - <<EOF
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: llama-31
+  name: llama-31-8b-instruct-w4a16
 spec:
   accessModes:
     - ReadWriteOnce
@@ -43,7 +43,7 @@ spec:
   volumes:
   - name: models
     persistentVolumeClaim:
-      claimName: llama-31
+      claimName: llama-31-8b-instruct-w4a16
 EOF
 ```
 ```bash
@@ -59,7 +59,6 @@ oc delete pod model-copy-pod
 ```
 
 # Tokenizer PVC
-
 This persistent volume will store the tokenizer to be used by guidellm, follow these instructions to create the PVC and copy the tokenizer from your local machine
 
 ```bash
@@ -68,7 +67,7 @@ oc create -f - <<EOF
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: tokenizer
+  name: llama-31-8b-instruct-w4a16-tokenizer
 spec:
   accessModes:
     - ReadWriteOnce
@@ -95,7 +94,7 @@ spec:
   volumes:
   - name: tokenizer
     persistentVolumeClaim:
-      claimName: tokenizer
+      claimName: llama-31-8b-instruct-w4a16-tokenizer
 EOF
 ```
 ```bash
@@ -111,16 +110,101 @@ oc cp ./local-models/llama/config.json tokenizer-copy-pod:/mnt/tokenizer/
 oc delete pod tokenizer-copy-pod
 ```
 
-## Deploy RHAIIS
+## Check Resource Limits
+
+Before deploying RHAIIS, check if there are any ResourceQuotas or LimitRanges in your namespace that might restrict resource allocation for the model serving pod:
+
 ```bash
-# Clean up
+# Check ResourceQuotas
+oc get resourcequotas -o yaml
+
+# Check LimitRanges  
+oc get limitranges -o yaml
+
+# Check current resource usage
+oc describe resourcequotas
+oc describe limitranges
+```
+
+If you see restrictive limits on CPU, memory, or GPU resources, you may need to:
+- Request quota increases from your cluster administrator
+- Modify the limits in your namespace
+- Override resource requests/limits in your Helm values
+
+## Deploy RHAIIS
+
+There are two options to deploy RHAIIS, by applying the objects in the rhaiis/openshift folder, or by using Helm charts.  The Helm charts option is more flexible because we can change things like the model and pvc names.
+
+To deploy RHAIIS configured for the RedHatAI/Meta-Llama-3.1-8B-Instruct-quantized.w4a16 model, run:
+
+```bash
 oc apply -f rhaiis/openshift
 ```
 
-## Deploy GuideLLM
+To deploy using the Helm chart, run:
+
 ```bash
-# Clean up
+helm install llama-31-8b-instruct-w4a16 ./rhaiis/helm --set model.pvcName=llama-31-8b-instruct-w4a16 
+```
+
+Any of the Helm chart values can be overidden for example:
+
+* model.pvcName
+* model.servedModelName
+* resources.gpu
+
+Configuring these values should allow for diffenent models, with different GPU requirements, and model weight persistent volumes.
+
+## Uninstall RHAIIS
+
+To uninstall the simple openshift deployment run:
+
+```bash
+oc delete -f rhaiis/openshift
+```
+
+To uninstall using helm, run:
+
+```bash
+helm uninstall llama-31-8b-instruct-w4a16 
+```
+
+
+## Deploy GuideLLM
+There are two options to deploy GuideLLM,  by applying the objects in the rhaiis/openshift folder, or by using Helm charts.  The Helm charts option is more flexible because we can change things like the model and pvc names.
+
+To deploy using OpenShift objects run:
+
+```bash
 oc apply -f guidellm/openshift
+```
+
+To deploy using the Helm chart, run:
+
+```bash
+helm install guidellm ./guidellm/helm \
+--set benchmark.target=http://llama-31-8b-instruct-w4a16-rhaiis:8000 \
+--set benchmark.model=meta-llama-3.1-8B-instruct-quantized.w4a16 \
+--set storage.tokenizerPvcName=llama-31-8b-instruct-w4a16-tokenizer 
+```
+
+Any of the Helm chart values can be overidden for example:
+
+* benchmark.maxRequests
+* benchmark.rateType
+
+Configuring these values should allow for diffenent models, with different GPU requirements, and model weight persistent volumes.
+
+To uninstall the simple openshift deployment run:
+
+```bash
+oc delete -f guidellm/openshift
+```
+
+To uninstall using helm run:
+
+```bash
+helm uninstall guidellm 
 ```
 
 ## Results

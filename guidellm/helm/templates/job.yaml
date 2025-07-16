@@ -1,0 +1,53 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "guidellm.fullname" . }}
+  labels:
+    {{- include "guidellm.labels" . | nindent 4 }}
+spec:
+  template:
+    metadata:
+      labels:
+        {{- include "guidellm.selectorLabels" . | nindent 8 }}
+    spec:
+      restartPolicy: Never
+      securityContext: {}
+      containers:
+      - name: {{ .Chart.Name }}
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        env:
+        - name: GUIDELLM_TARGET
+          value: {{ .Values.benchmark.target | quote }}
+        - name: GUIDELLM_MODEL
+          value: {{ .Values.benchmark.model | quote }}
+        - name: GUIDELLM_RATE_TYPE
+          value: {{ .Values.benchmark.rateType | quote }}
+        - name: GUIDELLM_DATA
+          value: {{ .Values.benchmark.data | quote }}
+        - name: GUIDELLM_MAX_REQUESTS
+          value: {{ .Values.benchmark.maxRequests | quote }}
+        - name: GUIDELLM_MAX_SECONDS
+          value: {{ .Values.benchmark.maxSeconds | quote }}
+        - name: GUIDELLM_OUTPUT_PATH
+          value: {{ .Values.benchmark.outputPath | quote }}
+        - name: GUIDELLM_PROCESSOR
+          value: {{ .Values.benchmark.processor | quote }}
+        resources:
+          requests:
+            memory: {{ .Values.resources.requests.memory }}
+            cpu: {{ .Values.resources.requests.cpu }}
+          limits:
+            memory: {{ .Values.resources.limits.memory }}
+            cpu: {{ .Values.resources.limits.cpu }}
+        volumeMounts:
+        - name: results
+          mountPath: /results
+        - name: tokenizer-pvc
+          mountPath: /mnt/tokenizer
+      volumes:
+      - name: results
+        emptyDir: {}
+      - name: tokenizer-pvc
+        persistentVolumeClaim:
+          claimName: {{ .Values.storage.tokenizerPvcName }}

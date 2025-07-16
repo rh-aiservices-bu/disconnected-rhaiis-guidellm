@@ -1,0 +1,28 @@
+image:
+  repository: quay.io/rh-aiservices-bu/guidellm
+  tag: f1f8ca8
+  pullPolicy: IfNotPresent
+
+benchmark:
+  target: "http://rhaiis:8000"
+  model: "llama-31-8b"
+  rateType: "sweep"
+  data: "prompt_tokens=256,output_tokens=128"
+  maxRequests: "100"
+  maxSeconds: ""
+  outputPath: "/results/results.json"
+  processor: "/mnt/tokenizer"
+
+storage:
+  tokenizerPvcName: "tokenizer"
+
+resources:
+  requests:
+    memory: "8Gi"
+    cpu: "500m"
+  limits:
+    memory: "8Gi"
+    cpu: "1000m"
+
+nameOverride: ""
+fullnameOverride: ""

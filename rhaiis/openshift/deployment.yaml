@@ -30,12 +30,8 @@ spec:
             - '--max-model-len=8096'
           resources:
             limits:
-              cpu: '10'
               nvidia.com/gpu: '1'
-              memory: 10Gi
             requests:
-              cpu: '2'
-              memory: 6Gi
               nvidia.com/gpu: '1'
           volumeMounts:
             - name: cache-volume
@@ -48,7 +44,7 @@ spec:
       volumes:
         - name: cache-volume
           persistentVolumeClaim:
-            claimName: granite-31-w8a8
+            claimName: llama-31-8b-instruct-w4a16
         - name: shm
           emptyDir:
             medium: Memory
