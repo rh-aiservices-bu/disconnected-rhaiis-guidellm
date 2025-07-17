@@ -144,7 +144,8 @@ oc apply -f rhaiis/openshift
 To deploy using the Helm chart, run:
 
 ```bash
-helm install llama-31-8b-instruct-w4a16 ./rhaiis/helm --set model.pvcName=llama-31-8b-instruct-w4a16 
+helm install llama-31-8b-instruct-w4a16 ./rhaiis/helm \
+--set model.pvcName=llama-31-8b-instruct-w4a16 
 ```
 
 Any of the Helm chart values can be overidden for example:
