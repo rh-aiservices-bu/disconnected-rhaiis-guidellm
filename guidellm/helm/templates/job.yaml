@@ -47,7 +47,8 @@ spec:
           mountPath: /mnt/tokenizer
       volumes:
       - name: results
-        emptyDir: {}
+        persistentVolumeClaim:
+          claimName: {{ include "guidellm.fullname" . }}-results
       - name: tokenizer-pvc
         persistentVolumeClaim:
           claimName: {{ .Values.storage.tokenizerPvcName }}

@@ -46,7 +46,8 @@ spec:
           mountPath: /mnt/tokenizer
       volumes:
       - name: results
-        emptyDir: {}
+        persistentVolumeClaim:
+          claimName: guidellm-results
       - name: tokenizer-pvc
         persistentVolumeClaim:
           claimName: llama-31-8b-instruct-w4a16-tokenizer

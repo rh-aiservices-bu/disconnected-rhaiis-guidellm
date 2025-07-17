@@ -15,6 +15,7 @@ benchmark:
 
 storage:
   tokenizerPvcName: "tokenizer"
+  resultsSize: "1Gi"
 
 resources:
   requests:
