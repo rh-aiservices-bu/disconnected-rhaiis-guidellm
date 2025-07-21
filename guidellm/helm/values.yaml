@@ -20,10 +20,8 @@ storage:
 resources:
   requests:
     memory: "8Gi"
-    cpu: "500m"
   limits:
     memory: "8Gi"
-    cpu: "1000m"
 
 nameOverride: ""
 fullnameOverride: ""

@@ -1,0 +1,32 @@
+image:
+  repository: quay.io/rh-ee-thibrahi/whisper-vllm-benchmarking
+  tag: latest
+  pullPolicy: IfNotPresent
+
+benchmark:
+  openaiApiKey: "EMPTY"
+  openaiApiBaseUrl: "http://whisper-serving:8000/v1"
+  targetModelName: "openai/whisper-large-v2"
+  language: "en"
+  concurrentRequests: "32"
+  resultsDir: "/results"
+  hfHome: "/opt/hf_home"
+
+storage:
+  resultsSize: "1Gi"
+
+resources:
+  requests:
+    memory: "4Gi"
+    cpu: "2"
+  limits:
+    memory: "8Gi"
+    cpu: "4"
+
+job:
+  completions: 1
+  parallelism: 1
+  backoffLimit: 3
+
+nameOverride: ""
+fullnameOverride: ""

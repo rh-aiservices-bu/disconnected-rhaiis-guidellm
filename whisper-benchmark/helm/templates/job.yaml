@@ -1,0 +1,78 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "whisper-benchmark.fullname" . }}-job
+  labels:
+    {{- include "whisper-benchmark.labels" . | nindent 4 }}
+spec:
+  completions: {{ .Values.job.completions }}
+  parallelism: {{ .Values.job.parallelism }}
+  backoffLimit: {{ .Values.job.backoffLimit }}
+  template:
+    metadata:
+      labels:
+        {{- include "whisper-benchmark.selectorLabels" . | nindent 8 }}
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: benchmark
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: OPENAI_API_KEY
+              value: {{ .Values.benchmark.openaiApiKey | quote }}
+            - name: OPENAI_API_BASE_URL
+              value: {{ .Values.benchmark.openaiApiBaseUrl | quote }}
+            - name: TARGET_MODEL_NAME
+              value: {{ .Values.benchmark.targetModelName | quote }}
+            - name: LANGUAGE
+              value: {{ .Values.benchmark.language | quote }}
+            - name: CONCURRENT_REQUESTS
+              value: {{ .Values.benchmark.concurrentRequests | quote }}
+            - name: RESULTS_DIR
+              value: {{ .Values.benchmark.resultsDir | quote }}
+            - name: HF_HOME
+              value: {{ .Values.benchmark.hfHome | quote }}
+          volumeMounts:
+            - name: results-volume
+              mountPath: /results
+            - name: shm
+              mountPath: /dev/shm
+          command:
+            - /bin/bash
+            - -c
+          args:
+            - |
+              echo "Starting benchmark..."
+              echo "Checking connectivity to $OPENAI_API_BASE_URL..."
+              
+              # Test connectivity with timeout
+              if ! curl -f --connect-timeout 30 --max-time 60 "${OPENAI_API_BASE_URL}/health" > /dev/null 2>&1; then
+                echo "ERROR: Cannot reach Whisper API endpoint at $OPENAI_API_BASE_URL"
+                echo "Please ensure the whisper-serving deployment is running and accessible"
+                exit 1
+              fi
+              
+              echo "✓ Successfully connected to Whisper API endpoint"
+              echo "Pod is ready for access. Waiting 30 seconds before starting benchmark..."
+              
+              # Keep pod running for 30 seconds to allow access
+              sleep 3000
+              
+              echo "Starting benchmark execution..."
+              /opt/whisper_benchmark/venv/bin/python /opt/whisper_benchmark/benchmark.py | tee -a /results/benchmark.log
+          resources:
+            requests:
+              memory: {{ .Values.resources.requests.memory | quote }}
+              cpu: {{ .Values.resources.requests.cpu | quote }}
+            limits:
+              memory: {{ .Values.resources.limits.memory | quote }}
+              cpu: {{ .Values.resources.limits.cpu | quote }}
+      volumes:
+        - name: results-volume
+          persistentVolumeClaim:
+            claimName: whisper-results
+        - name: shm
+          emptyDir:
+            medium: Memory
+            sizeLimit: 1Gi

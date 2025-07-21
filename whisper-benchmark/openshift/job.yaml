@@ -1,0 +1,73 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: whisper-benchmark-job
+  labels:
+    app: whisper-benchmark
+spec:
+  completions: 1
+  parallelism: 1
+  backoffLimit: 3
+  template:
+    metadata:
+      labels:
+        app: whisper-benchmark
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: benchmark
+          image: quay.io/rh-ee-thibrahi/whisper-vllm-benchmarking:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: OPENAI_API_KEY
+              value: "EMPTY"
+            - name: OPENAI_API_BASE_URL
+              value: "http://whisper-serving:8000/v1"
+            - name: TARGET_MODEL_NAME
+              value: "openai/whisper-large-v2"
+            - name: LANGUAGE
+              value: "en"
+            - name: CONCURRENT_REQUESTS
+              value: "32"
+            - name: RESULTS_DIR
+              value: "/results"
+            - name: HF_HOME
+              value: "/opt/hf_home"
+          volumeMounts:
+            - name: results-volume
+              mountPath: /results
+            - name: shm
+              mountPath: /dev/shm
+          command:
+            - /bin/bash
+            - -c
+          args:
+            - |
+              echo "Starting benchmark..."
+              echo "Checking connectivity to $OPENAI_API_BASE_URL..."
+              
+              # Test connectivity with timeout
+              if ! curl -f --connect-timeout 30 --max-time 60 "${OPENAI_API_BASE_URL}/health" > /dev/null 2>&1; then
+                echo "ERROR: Cannot reach Whisper API endpoint at $OPENAI_API_BASE_URL"
+                echo "Please ensure the whisper-serving deployment is running and accessible"
+                exit 1
+              fi
+              
+              echo "✓ Successfully connected to Whisper API endpoint"
+              echo "Starting benchmark execution..."
+              /opt/whisper_benchmark/venv/bin/python /opt/whisper_benchmark/benchmark.py | tee -a /results/benchmark.log
+          resources:
+            requests:
+              memory: "4Gi"
+              cpu: "2"
+            limits:
+              memory: "8Gi"
+              cpu: "4"
+      volumes:
+        - name: results-volume
+          persistentVolumeClaim:
+            claimName: whisper-results
+        - name: shm
+          emptyDir:
+            medium: Memory
+            sizeLimit: 1Gi

@@ -172,7 +172,7 @@ helm uninstall llama-31-8b-instruct-w4a16
 
 
 ## Deploy GuideLLM
-There are two options to deploy GuideLLM,  by applying the objects in the rhaiis/openshift folder, or by using Helm charts.  The Helm charts option is more flexible because we can change things like the model and pvc names.
+There are two options to deploy GuideLLM,  by applying the objects in the guidellm/openshift folder, or by using Helm charts.  The Helm charts option is more flexible because we can change things like the model and pvc names.
 
 To deploy using OpenShift objects run:
 
@@ -206,6 +206,42 @@ To uninstall using helm run:
 
 ```bash
 helm uninstall guidellm 
+```
+
+## Deploy Whisper Benchmark
+There are two options to deploy the Whisper benchmark,  by applying the objects in the whisper-benchmark/openshift folder, or by using Helm charts.  The Helm charts option is more flexible because we can change configuration values.
+
+To deploy using OpenShift objects run:
+
+```bash
+oc apply -f whisper-benchmark/openshift
+```
+
+To deploy using the Helm chart, run:
+
+```bash
+helm install whisper-benchmark ./whisper-benchmark/helm \
+--set benchmark.openaiApiBaseUrl=http://whisper-large-v2-rhaiis:8000/v1 \
+--set benchmark.targetModelName=openai/whisper-large-v2
+```
+
+Any of the Helm chart values can be overidden for example:
+
+* benchmark.concurrentRequests
+* benchmark.language
+* resources.requests.memory
+* resources.limits.memory
+
+To uninstall the simple openshift deployment run:
+
+```bash
+oc delete -f whisper-benchmark/openshift
+```
+
+To uninstall using helm run:
+
+```bash
+helm uninstall whisper-benchmark 
 ```
 
 ## Results
