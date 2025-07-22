@@ -2,7 +2,7 @@
 
 This repository will guide you through deploying RHAIIS and GuideLLM on OpenShift.  
 
-Before we deploy the components, we will first create two persistent volumes one for the model weights to be used by RHAIIS, and the other one to store the tokenizer for GuideLLM
+Before we deploy the components, we will first create two persistent volumes one for the model weights to be used by RHAIIS, and the other one to store the tokenizer for GuideLLM and the Whisper Benchmark image
 
 These instructions will use a model located in local-models/llama, downloaded from RedHatAI/Meta-Llama-3.1-8B-Instruct-quantized.w4a16
 
@@ -222,7 +222,8 @@ To deploy using the Helm chart, run:
 ```bash
 helm install whisper-benchmark ./whisper-benchmark/helm \
 --set benchmark.openaiApiBaseUrl=http://whisper-large-v2-rhaiis:8000 \
---set benchmark.targetModelName=openai/whisper-large-v2
+--set benchmark.targetModelName=openai/whisper-large-v2 \
+--set storage.modelPvcName=whisper-tokenizer
 ```
 
 Any of the Helm chart values can be overidden for example:
@@ -279,4 +280,19 @@ constant@19.31     | 17.01        | 55.03              | 2177.3     | 6533.4    
                    |              |                    | 3.24       | 4.26        | 166.4  | 61.5   | 569.8 | 24.2   | 25.1   | 31.2
 ================================================================================
 
+```
+
+Once the Whisper Benchmarking tool is complete you will see results e.g.
+
+```bash
+WER: 100.0
+Total Requests: 479
+Mean TTFT: 142.9556276326482
+95th Percentile TTFT: 309.7570 ms
+Mean ITL: 142.9556276326482
+95th Percentile ITL: 309.7570 ms
+Average Latency: 0.1430 seconds
+Estimated req_Throughput: 216.48 requests/s
+Estimated Throughput: 2164.80 tok/s
+Benchmark finished. Final WER: 100.00%
 ```

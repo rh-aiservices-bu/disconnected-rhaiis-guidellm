@@ -36,7 +36,7 @@ spec:
             - name: HF_HOME
               value: "/opt/hf_home"
           volumeMounts:
-            - name: model-volume
+            - name: tokenizer-volume
               mountPath: /mnt/models
             - name: results-volume
               mountPath: /results
@@ -72,7 +72,7 @@ spec:
               memory: "8Gi"
               cpu: "4"
       volumes:
-        - name: model-volume
+        - name: tokenizer-volume
           persistentVolumeClaim:
             claimName: whisper-large-v2-cache-1
         - name: results-volume
