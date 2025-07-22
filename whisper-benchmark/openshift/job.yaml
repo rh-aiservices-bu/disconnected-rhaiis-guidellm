@@ -16,13 +16,13 @@ spec:
       restartPolicy: Never
       containers:
         - name: benchmark
-          image: quay.io/rh-ee-thibrahi/whisper-vllm-benchmarking:latest
-          imagePullPolicy: IfNotPresent
+          image: quay.io/rh-ee-thibrahi/whisper-vllm-benchmarking:2025-07-21
+          imagePullPolicy: Always
           env:
             - name: OPENAI_API_KEY
               value: "EMPTY"
             - name: OPENAI_API_BASE_URL
-              value: "http://whisper-serving:8000/v1"
+              value: "http://whisper-serving:8000"
             - name: TARGET_MODEL_NAME
               value: "openai/whisper-large-v2"
             - name: LANGUAGE
@@ -31,9 +31,13 @@ spec:
               value: "32"
             - name: RESULTS_DIR
               value: "/results"
+            - name: MODEL_DIR
+              value: "/mnt/models"
             - name: HF_HOME
               value: "/opt/hf_home"
           volumeMounts:
+            - name: model-volume
+              mountPath: /mnt/models
             - name: results-volume
               mountPath: /results
             - name: shm
@@ -45,7 +49,11 @@ spec:
             - |
               echo "Starting benchmark..."
               echo "Checking connectivity to $OPENAI_API_BASE_URL..."
-              
+              echo "Using model from $MODEL_DIR"
+              echo "Using results directory $RESULTS_DIR"
+              echo "Using concurrent requests $CONCURRENT_REQUESTS"
+              echo "Using language $LANGUAGE"
+              echo "Using target model name $TARGET_MODEL_NAME"
               # Test connectivity with timeout
               if ! curl -f --connect-timeout 30 --max-time 60 "${OPENAI_API_BASE_URL}/health" > /dev/null 2>&1; then
                 echo "ERROR: Cannot reach Whisper API endpoint at $OPENAI_API_BASE_URL"
@@ -55,7 +63,7 @@ spec:
               
               echo "✓ Successfully connected to Whisper API endpoint"
               echo "Starting benchmark execution..."
-              /opt/whisper_benchmark/venv/bin/python /opt/whisper_benchmark/benchmark.py | tee -a /results/benchmark.log
+              python /opt/whisper_benchmark/vllm_streaming_openai_client.py | tee -a /results/benchmark.log
           resources:
             requests:
               memory: "4Gi"
@@ -64,6 +72,9 @@ spec:
               memory: "8Gi"
               cpu: "4"
       volumes:
+        - name: model-volume
+          persistentVolumeClaim:
+            claimName: whisper-large-v2-cache-1
         - name: results-volume
           persistentVolumeClaim:
             claimName: whisper-results
