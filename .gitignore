@@ -1,3 +1,4 @@
 .env
 local-models
 .DS_Store
+pull-secret.yaml
