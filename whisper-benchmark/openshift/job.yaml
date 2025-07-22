@@ -16,7 +16,7 @@ spec:
       restartPolicy: Never
       containers:
         - name: benchmark
-          image: quay.io/rh-ee-thibrahi/whisper-vllm-benchmarking:2025-07-21
+          image: quay.io/rh-aiservices-bu/whisper-vllm-benchmarking:2025-07-21
           imagePullPolicy: Always
           env:
             - name: OPENAI_API_KEY

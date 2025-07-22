@@ -1,11 +1,11 @@
 image:
-  repository: quay.io/rh-ee-thibrahi/whisper-vllm-benchmarking
-  tag: latest
+  repository: quay.io/rh-aiservices-bu/whisper-vllm-benchmarking
+  tag: 2025-07-21
   pullPolicy: IfNotPresent
 
 benchmark:
   openaiApiKey: "EMPTY"
-  openaiApiBaseUrl: "http://whisper-serving:8000/v1"
+  openaiApiBaseUrl: "http://whisper-serving:8000"
   targetModelName: "openai/whisper-large-v2"
   language: "en"
   concurrentRequests: "32"
@@ -14,6 +14,7 @@ benchmark:
 
 storage:
   resultsSize: "1Gi"
+  modelPvcName: "whisper-benchmark"
 
 resources:
   requests:

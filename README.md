@@ -221,7 +221,7 @@ To deploy using the Helm chart, run:
 
 ```bash
 helm install whisper-benchmark ./whisper-benchmark/helm \
---set benchmark.openaiApiBaseUrl=http://whisper-large-v2-rhaiis:8000/v1 \
+--set benchmark.openaiApiBaseUrl=http://whisper-large-v2-rhaiis:8000 \
 --set benchmark.targetModelName=openai/whisper-large-v2
 ```
 

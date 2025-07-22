@@ -31,9 +31,13 @@ spec:
               value: {{ .Values.benchmark.concurrentRequests | quote }}
             - name: RESULTS_DIR
               value: {{ .Values.benchmark.resultsDir | quote }}
+            - name: MODEL_DIR
+              value: "/mnt/models"
             - name: HF_HOME
               value: {{ .Values.benchmark.hfHome | quote }}
           volumeMounts:
+            - name: model-volume
+              mountPath: /mnt/models
             - name: results-volume
               mountPath: /results
             - name: shm
@@ -45,7 +49,11 @@ spec:
             - |
               echo "Starting benchmark..."
               echo "Checking connectivity to $OPENAI_API_BASE_URL..."
-              
+              echo "Using model from $MODEL_DIR"
+              echo "Using results directory $RESULTS_DIR"
+              echo "Using concurrent requests $CONCURRENT_REQUESTS"
+              echo "Using language $LANGUAGE"
+              echo "Using target model name $TARGET_MODEL_NAME"
               # Test connectivity with timeout
               if ! curl -f --connect-timeout 30 --max-time 60 "${OPENAI_API_BASE_URL}/health" > /dev/null 2>&1; then
                 echo "ERROR: Cannot reach Whisper API endpoint at $OPENAI_API_BASE_URL"
@@ -54,13 +62,8 @@ spec:
               fi
               
               echo "✓ Successfully connected to Whisper API endpoint"
-              echo "Pod is ready for access. Waiting 30 seconds before starting benchmark..."
-              
-              # Keep pod running for 30 seconds to allow access
-              sleep 3000
-              
               echo "Starting benchmark execution..."
-              /opt/whisper_benchmark/venv/bin/python /opt/whisper_benchmark/benchmark.py | tee -a /results/benchmark.log
+              python /opt/whisper_benchmark/vllm_streaming_openai_client.py | tee -a /results/benchmark.log
           resources:
             requests:
               memory: {{ .Values.resources.requests.memory | quote }}
@@ -69,6 +72,9 @@ spec:
               memory: {{ .Values.resources.limits.memory | quote }}
               cpu: {{ .Values.resources.limits.cpu | quote }}
       volumes:
+        - name: model-volume
+          persistentVolumeClaim:
+            claimName: {{ .Values.storage.modelPvcName | default "whisper-large-v2-cache-1" }}
         - name: results-volume
           persistentVolumeClaim:
             claimName: whisper-results
