@@ -32,11 +32,6 @@ spec:
           value: "/results/results.json"
         - name: GUIDELLM_PROCESSOR
           value: "/mnt/tokenizer"
-        resources:
-          requests:
-            memory: "8Gi"
-          limits:
-            memory: "8Gi"
         volumeMounts:
         - name: results
           mountPath: /results
